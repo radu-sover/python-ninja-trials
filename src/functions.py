@@ -174,7 +174,7 @@ def counter_3():
     return increment_counter
 
 
-maxcheck = read_number()
+# maxcheck = read_number()
 
 # for i in find_all_primes(maxcheck):
 #     print(i)
