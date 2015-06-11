@@ -1,7 +1,9 @@
 __author__ = 'radu.sover'
 
-import functions
 import re
+
+import functions
+
 
 class Stream:
     def write(self, s):
@@ -72,20 +74,47 @@ def find_unique_words(file):
 
 # 4. Write a program that reads a number of files containing sorted numbers (one number per line)
 # and outputs a large file with all the numbers from all the files sorted.
+def minimum_item(position_values):
+    position = 0
+    minimum = None
+    for x in position_values:
+        if minimum is None or minimum > position_values[x]:
+            minimum = position_values[x]
+            position = x
+    return position, minimum
 
+
+def sort_files(file_streams, output_stream):
+    '''Quick implementation
+    :param file_streams: iterable of stream with ordered items
+    :param output_stream: stream where the results will be written in ordered sequence
+    :return: pass
+    '''
+    new_line = '\n'
+    position_values = {x: int(files_streams[x].readline().rstrip(new_line)) for x in range(len(files_streams))}
+
+    while len(position_values) > 0:
+        position, minimum = minimum_item(position_values)
+        output_stream.write(str(minimum) + new_line)
+        read = files_streams[position].readline()
+        if read == '':
+            del position_values[position]
+        else:
+            position_values[position] = int(read.rstrip(new_line))
+    pass
 
 # 5. Extract all the links in a website on a given URL.
-# can I use memoize? ...
+# can I use memoize? ... ceva paralelizare...
 # am observat ceva ciudat aici, in links am avut cand main primul, cand era al doilea..
 def crawl_website_links(url):
     links = {}
 
-    def pythonian_crawl(url):
+    def crawl(url):
         links[url] = "crawled"
         pass
 
     links[url] = "MAIN"
-    pythonian_crawl("second")
+    crawl("second")
 
     return links
 
@@ -95,19 +124,31 @@ if __name__ == '__main__':
     primes = functions.find_all_primes(40)
     with open('prime_numbers_file', 'w') as f:
         write_prime_numbers(primes, f)
+        print('1. File write is done')
 
     # problema 1 foloseste content
-    print(compute_sum('prime_numbers_file'))
+    print("2. Sum = ", compute_sum('prime_numbers_file'))
 
     # problema 3: numaratoare
     with open('probetext.txt', 'r', encoding='latin-1') as f:
         single, multiple = find_unique_words(f)
-        print("Single: ", single[:10], ' ... first 10')
-        print("Multiple: ", multiple[:10], ' ... first 10')
+        print("3. Single: ", single[:10], ' ... first 10')
+        print("3. Multiple: ", multiple[:10], ' ... first 10')
 
-    #problema 4: merge sorted files
+    # problem 4: merge sorted files
+    file_names = ['sort/file1.txt', 'sort/file2.txt', 'sort/file3.txt']
+    # it will crash because on dict comprehension I don't take in account empty files
+    # file_names.append('sort/file4.txt')
+    try:
+        files_streams = [open(x, 'r') for x in file_names]
+        result_stream = open('sort/result.txt', 'w')
+        sort_files(files_streams, result_stream)
+    except IOError:
+        print('problems with the IO')
+    finally:
+        map(lambda x: x.close(), filter(lambda x: not x.closed, files_streams))
+        print('4. Sorting done')
 
-    #problema 5: crawl for href
+    # problem 5: crawl for href
     print(crawl_website_links("https://ep2015.europython.eu/en/"))
-
-    print('nothing else here')
+    print('5. in progress... nothing else to see here')
