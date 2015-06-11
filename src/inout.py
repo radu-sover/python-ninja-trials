@@ -46,7 +46,6 @@ def compute_sum(file_name):
         for line in f:
             sum += int(line)
 
-
     return sum
 
 
@@ -76,7 +75,19 @@ def find_unique_words(file):
 
 
 # 5. Extract all the links in a website on a given URL.
+# can I use memoize? ...
+# am observat ceva ciudat aici, in links am avut cand main primul, cand era al doilea..
+def crawl_website_links(url):
+    links = {}
 
+    def pythonian_crawl(url):
+        links[url] = "crawled"
+        pass
+
+    links[url] = "MAIN"
+    pythonian_crawl("second")
+
+    return links
 
 
 if __name__ == '__main__':
@@ -89,9 +100,14 @@ if __name__ == '__main__':
     print(compute_sum('prime_numbers_file'))
 
     # problema 3: numaratoare
-    with open('text.txt', 'r', encoding='latin-1') as f:
+    with open('probetext.txt', 'r', encoding='latin-1') as f:
         single, multiple = find_unique_words(f)
         print("Single: ", single[:10], ' ... first 10')
         print("Multiple: ", multiple[:10], ' ... first 10')
+
+    #problema 4: merge sorted files
+
+    #problema 5: crawl for href
+    print(crawl_website_links("https://ep2015.europython.eu/en/"))
 
     print('nothing else here')
