@@ -45,6 +45,7 @@ def compute_sum(file_name):
         for line in f:
             sum += int(line)
 
+
     return sum
 
 
@@ -64,4 +65,5 @@ if __name__ == '__main__':
     with open('prime_numbers_file', 'w') as f:
         write_prime_numbers(primes, f)
 
+    print(compute_sum('prime_numbers_file'))
     print('nothing else here')
