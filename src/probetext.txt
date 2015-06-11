@@ -1,0 +1,4 @@
+Ana are mere.
+Radu are pere.
+Cine are cirese?
+Radu|Ana, au [mere] si [pere]

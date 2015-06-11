@@ -1,6 +1,7 @@
 __author__ = 'radu.sover'
 
 import functions
+import re
 
 class Stream:
     def write(self, s):
@@ -50,7 +51,25 @@ def compute_sum(file_name):
 
 
 # 3. Find all the words used only once in a file containing text.
+def find_unique_words(file):
+    split_pattern = '; |, |\*|\n |_ |\s'
+    search_pattern = '\W+'
+    one_occurrence = []
+    multi_occurrence = []
 
+    for line in f:
+        # for word in line.encode(encoding='utf-8').split(): # Daca fisierul e deschis cu encoding implicit
+        # for word in re.split(split_pattern, line):
+        for word in map(lambda x: str.lower(x), re.split(search_pattern, line)):
+            # unique_hash = hash(word)
+            if (word not in multi_occurrence) and (word not in one_occurrence):
+                one_occurrence.append(word)
+            elif word in one_occurrence:
+                one_occurrence.remove(word)
+                if word not in multi_occurrence:
+                    multi_occurrence.append(word)
+
+    return one_occurrence, multi_occurrence
 
 # 4. Write a program that reads a number of files containing sorted numbers (one number per line)
 # and outputs a large file with all the numbers from all the files sorted.
@@ -61,9 +80,18 @@ def compute_sum(file_name):
 
 
 if __name__ == '__main__':
+    # problema 2 imi genereaza content pt problema 1
     primes = functions.find_all_primes(40)
     with open('prime_numbers_file', 'w') as f:
         write_prime_numbers(primes, f)
 
+    # problema 1 foloseste content
     print(compute_sum('prime_numbers_file'))
+
+    # problema 3: numaratoare
+    with open('text.txt', 'r', encoding='latin-1') as f:
+        single, multiple = find_unique_words(f)
+        print("Single: ", single[:10], ' ... first 10')
+        print("Multiple: ", multiple[:10], ' ... first 10')
+
     print('nothing else here')
