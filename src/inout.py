@@ -53,7 +53,6 @@ def compute_sum(file_name):
 
 # 3. Find all the words used only once in a file containing text.
 def find_unique_words(file):
-    split_pattern = '; |, |\*|\n |_ |\s'
     search_pattern = '\W+'
     one_occurrence = []
     multi_occurrence = []
