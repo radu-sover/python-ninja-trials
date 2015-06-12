@@ -1,5 +1,8 @@
 __author__ = 'radu.sover'
-
+import pdb
+from os import linesep # pentru separator de linie, dar la scris in fisier nu a fost prea placut
+from functools import reduce
+from urllib import request, parse
 import re
 
 import functions
@@ -71,6 +74,7 @@ def find_unique_words(file):
 
     return one_occurrence, multi_occurrence
 
+
 # 4. Write a program that reads a number of files containing sorted numbers (one number per line)
 # and outputs a large file with all the numbers from all the files sorted.
 def minimum_item(position_values):
@@ -91,7 +95,7 @@ def sort_files(file_streams, output_stream):
     '''
     new_line = '\n'
     position_values = {x: int(files_streams[x].readline().rstrip(new_line)) for x in range(len(files_streams))}
-
+    # pdb.set_trace()
     while len(position_values) > 0:
         position, minimum = minimum_item(position_values)
         output_stream.write(str(minimum) + new_line)
@@ -102,18 +106,35 @@ def sort_files(file_streams, output_stream):
             position_values[position] = int(read.rstrip(new_line))
     pass
 
+
 # 5. Extract all the links in a website on a given URL.
 # can I use memoize? ... ceva paralelizare...
 # am observat ceva ciudat aici, in links am avut cand main primul, cand era al doilea..
 def crawl_website_links(url):
-    links = {}
+    regex_pattern = r'<a.*?\s*href=\"(.*?)\".*?></a>' # r'<a.*?\s*href=\"(.*?)\".*?>(.*?)</a>' will return tuple link,text
+    links = []
 
-    def crawl(url):
-        links[url] = "crawled"
-        pass
+    def crawl(grab_url):
+        try:
+            with request.urlopen(grab_url) as raw_html:
+                html = raw_html.read().decode('utf-8')
 
-    links[url] = "MAIN"
-    crawl("second")
+            urls = re.findall(regex_pattern, html)
+        except ValueError:
+            return []
+        # print('URL gasite: ', urls)
+
+        return urls
+
+    found_urls = crawl(url)
+    links.extend(found_urls)
+    while len(found_urls) > 0:
+        # reduce with extend only if it not exists already
+        # filter only URL in main domain
+        found_urls = reduce(lambda a, b: a.extend(b),
+                            map(lambda x: crawl(x),
+                            filter(lambda x: x not in links, found_urls)), [])
+        links.extend(found_urls)
 
     return links
 
