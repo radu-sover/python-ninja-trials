@@ -108,7 +108,7 @@ def sort_files(file_streams, output_stream):
 
 
 # 5. Extract all the links in a website on a given URL.
-# can I use memoize? ... ceva paralelizare...
+# can I use memoize ca sa nu mai parseze url ce au fost parsate? ... ceva paralelizare...
 # am observat ceva ciudat aici, in links am avut cand main primul, cand era al doilea..
 def crawl_website_links(url):
     regex_pattern = r'<a.*?\s*href=\"(.*?)\".*?></a>' # r'<a.*?\s*href=\"(.*?)\".*?>(.*?)</a>' will return tuple link,text
