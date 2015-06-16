@@ -101,11 +101,15 @@ class Configuration:
         found = None
         section_property = [str.replace(x, '_', '.') for x in item.split('__')]
         if len(section_property) == 2:
-            if (section_property[0] in self.configurations.keys()) and (section_property[1] in self.configurations[section_property[0]].keys()):
-                found = self.configurations[section_property[0]][section_property[1]]
+            sec = section_property[0]
+            prop = section_property[1]
+
+            if (sec in self.configurations.keys()) and (prop in self.configurations[sec].keys()):
+                found = self.configurations[sec][prop]
         elif len(section_property) == 1:
-            if section_property[0] in self.configurations.keys():
-                found = self.configurations[section_property[0]]
+            sec = section_property[0]
+            if sec in self.configurations.keys():
+                found = self.configurations[sec]
 
         return functools.partial(Configuration._found_property_or_default, found)
 
@@ -200,7 +204,7 @@ if __name__ == '__main__':
 
     log = Logger(__name__)
     log.set_level(Logger.DEBUG)
-    log.set_sink(FileLoggerSink('e:\logger.txt'))
+    # log.set_sink(FileLoggerSink('e:\logger.txt'))
 
     log.log_info('started the program')
     log.log_debug('inca o logare....')
