@@ -122,7 +122,7 @@ class SemanticLogger:
     sink
     Event
     decorators
-    ... sau plain old logging.. 
+    ... sau plain old logging..
     """
 
     def __init__(self):
