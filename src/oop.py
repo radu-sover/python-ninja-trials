@@ -1,5 +1,6 @@
 import functools
-
+import traceback
+import sys
 
 class Queue:
 
@@ -147,11 +148,15 @@ class Logger:
         """
         self.level = level
 
-    def log_error(self, exception, message=None):
+    def log_error(self, message=None):
         if self.level >= Logger.ERROR:
+            exception_formatted = None
+            if sys.exc_info()[0] is not None:
+                exception_formatted = traceback.format_exc()
+
             self.sink.write(
                 "ERROR in {component} | Exception: {exception}; message: {message}".format(
-                    exception=exception, message=message, component=self.component))
+                    exception=exception_formatted, message=message, component=self.component))
 
     def log_info(self, message):
         if self.level >= Logger.INFO:
@@ -204,8 +209,13 @@ if __name__ == '__main__':
 
     log = Logger(__name__)
     log.set_level(Logger.DEBUG)
-    # log.set_sink(FileLoggerSink('e:\logger.txt'))
+    log.set_sink(FileLoggerSink('e:\logger.txt'))
 
     log.log_info('started the program')
     log.log_debug('inca o logare....')
-    log.log_error(ValueError('errrrrrr'), 'inca o logare....')
+    log.log_error('inca o eroare for stack de eroare....')
+
+    try:
+        d = 34 / 0
+    except ZeroDivisionError:
+        log.log_error()
