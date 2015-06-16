@@ -54,7 +54,6 @@ class Configuration:
         value = a.section__property(with_default)
         value = a.ip_addresses__home_pc1()
 
-
     """
 
     def __init__(self):
@@ -93,7 +92,7 @@ class Configuration:
     def __getitem__(self, item):
         return self.configurations[item]
 
-    def found_property_or_default(found_value, default_value=None):
+    def _found_property_or_default(found_value, default_value=None):
         if found_value is None:
             return default_value
         return found_value
@@ -108,11 +107,11 @@ class Configuration:
             if section_property[0] in self.configurations.keys():
                 found = self.configurations[section_property[0]]
 
-        return functools.partial(Configuration.found_property_or_default, found)
+        return functools.partial(Configuration._found_property_or_default, found)
 
 
 # Design a logging library API and implement it.
-class SemanticLogger:
+class Logger:
     """
     Usage:
     l = Logger('component')
@@ -125,14 +124,62 @@ class SemanticLogger:
     ... sau plain old logging..
     """
 
+    ERROR = 1
+    INFO = 2
+    DEBUG = 3
+
+    def __init__(self, component):
+        self.component = component
+        self.level = Logger.ERROR
+        self.sink = LoggerSink()
+
+    def set_sink(self, sink_instance):
+        self.sink = sink_instance
+
+    def set_level(self, level):
+        """
+        :param level: one of the Logger.ERROR, INFO, DEBUG
+        :return: None
+        """
+        self.level = level
+
+    def log_error(self, exception, message=None):
+        if self.level >= Logger.ERROR:
+            self.sink.write(
+                "ERROR in {component} | Exception: {exception}; message: {message}".format(
+                    exception=exception, message=message, component=self.component))
+
+    def log_info(self, message):
+        if self.level >= Logger.INFO:
+            self.sink.write(
+                "INFO in {component} | message: {message}".format(
+                    message=message, component=self.component))
+
+    def log_debug(self, verbose):
+        if self.level >= Logger.DEBUG:
+            self.sink.write(
+                "DEBUG in {component} | verbose: {verbose}".format(
+                    verbose=verbose, component=self.component))
+
+    pass
+
+
+class LoggerSink:
     def __init__(self):
         pass
 
-    pass
+    def write(self, message):
+        print(message)
 
-class EventSource:
 
-    pass
+class FileLoggerSink(LoggerSink):
+    def __init__(self, file_path):
+        self.file_path = file_path
+
+    def write(self, message):
+        with open(self.file_path, mode='a') as f:
+            f.write('%s\n' % message)
+
 
 if __name__ == '__main__':
     config = Configuration()
@@ -150,3 +197,11 @@ if __name__ == '__main__':
     print('4 - ', config.ip_addresses())
     print('5 - ', config.ip_addresses__home_pc('192.168.0.1'))
     print('6 - ', config.cucu_bambucu('bau bau'))
+
+    log = Logger(__name__)
+    log.set_level(Logger.DEBUG)
+    log.set_sink(FileLoggerSink('e:\logger.txt'))
+
+    log.log_info('started the program')
+    log.log_debug('inca o logare....')
+    log.log_error(ValueError('errrrrrr'), 'inca o logare....')
