@@ -1,4 +1,3 @@
-import functools
 import traceback
 import sys
 
@@ -27,6 +26,8 @@ class Queue:
     def size(self):
         return len(self.items)
 
+    __len__ = size
+
 class PriorityQueue(Queue):
 
     def add(self, item, priority=False):
@@ -42,13 +43,7 @@ class Configuration:
     """
     A class to handle simple ini file configurations.
     Usage:
-        a = Configuration()
-        a.read('file path to read')
-        a.read_string('...')
-
-        section = a['section']
-        properties = a.properties['section']
-        value = a.['section']['property']
+        a = Configuration(fobj)
 
         # other option to read config
         # config has inside section named: ip.addresses and property home.pc1
@@ -57,65 +52,83 @@ class Configuration:
 
     """
 
-    def __init__(self):
+    def __init__(self, config_and_section):
         self.configurations = {}
-
-    def read(self, file_path):
-        """
-        Poor man implementation
-        :param file_path:
-        :return: None
-        """
-        section_start = '['
-        property_not_start = [';', '', '\n']
-
-        with open(file_path, 'r') as f:
-            section_name = '__none__'
-            for line in f:
-                line = line.strip('\n')
-                if len(line) == 0:
-                    continue
-
-                if section_start == line[0]:
-                    section_name = line[1:-1]
-                    self.configurations[section_name] = {}
-                elif line[0] not in property_not_start:
-                    property_name, property_value = line.split('=')
-                    self.configurations[section_name][property_name] = property_value
-
-    def sections(self):
-        # return the sections from the config
-        return self.configurations.keys()
-
-    def properties(self, section_key):
-        return self.configurations[section_key]
+        try:
+            for sec in iter(config_and_section):
+                self.configurations[sec] = {}
+                for prop in iter(config_and_section[sec]):
+                    self.configurations[sec][prop] = config_and_section[sec][prop]
+        except TypeError:
+            raise
 
     def __getitem__(self, item):
         return self.configurations[item]
 
-    def _found_property_or_default(found_value, default_value=None):
-        if found_value is None:
-            return default_value
-        return found_value
-
     def __getattr__(self, item):
         found = None
         section_property = [str.replace(x, '_', '.') for x in item.split('__')]
+
         if len(section_property) == 2:
             sec = section_property[0]
             prop = section_property[1]
+            found = self.configurations.get(sec, {}).get(prop)
 
-            if (sec in self.configurations.keys()) and (prop in self.configurations[sec].keys()):
-                found = self.configurations[sec][prop]
         elif len(section_property) == 1:
             sec = section_property[0]
-            if sec in self.configurations.keys():
-                found = self.configurations[sec]
+            found = self.configurations.get(sec)
 
-        return functools.partial(Configuration._found_property_or_default, found)
+        if not found:
+            raise AttributeError
+
+        return found
+
+
+def ConfigurationFromFile(fobj):
+    """
+    Poor man implementation
+    :param file_path:
+    :return: None
+    """
+    configuration = {}
+
+    section_start = '['
+    property_not_start = [';', '', '\n']
+
+    section_name = '__none__'
+    for line in fobj:
+        line = line.strip('\n')
+        if len(line) == 0:
+            continue
+
+        if section_start == line[0]:
+            section_name = line[1:-1]
+            configuration[section_name] = {}
+        elif line[0] not in property_not_start:
+            property_name, property_value = line.split('=')
+            configuration[section_name][property_name] = property_value
+
+    return Configuration(configuration)
 
 
 # Design a logging library API and implement it.
+class LoggerSink:
+    def __init__(self):
+        pass
+
+    def write(self, message):
+        print(message)
+
+
+class FileLoggerSink(LoggerSink):
+    def __init__(self, file_path):
+        self.file_path = file_path
+
+    def write(self, message):
+        with open(self.file_path, mode='a') as f:
+            f.write('%s\n' % message)
+
+
 class Logger:
     """
     Usage:
@@ -133,10 +146,22 @@ class Logger:
     INFO = 2
     DEBUG = 3
 
-    def __init__(self, component):
+    def __init__(self, component, level=ERROR, sink=LoggerSink):
         self.component = component
         self.level = Logger.ERROR
-        self.sink = LoggerSink()
+        self.sink = sink
+
+    @classmethod
+    def logger_with_sink(cls, component, sink) -> 'Logger':
+        """
+        Create a new logger with custom sink
+        :param component:
+        :param sink:
+        :return: Logger
+        """
+        log = cls(component)
+        log.set_sink(sink)
+        return log
 
     def set_sink(self, sink_instance):
         self.sink = sink_instance
@@ -173,49 +198,35 @@ class Logger:
     pass
 
 
-class LoggerSink:
-    def __init__(self):
-        pass
-
-    def write(self, message):
-        print(message)
-
-
-class FileLoggerSink(LoggerSink):
-    def __init__(self, file_path):
-        self.file_path = file_path
-
-    def write(self, message):
-        with open(self.file_path, mode='a') as f:
-            f.write('%s\n' % message)
-
-
 if __name__ == '__main__':
-    config = Configuration()
-    config.read('config.ini')
+    # q = Queue()
+    # print(len(q))
 
-    # print('1 - ', config.owner__name())
-    # print('1 - ', config['owner']['name'])
-    #
-    # print('2 - ', config.database())
-    # print('2 - ', config['database'])
-    #
-    print('3 - ', config.database__file())
+    with open('config.ini', 'r') as f:
+        config = ConfigurationFromFile(f)
+
+    print('1 - ', config.owner__name)
+    print('1 - ', config['owner']['name'])
+
+    print('2 - ', config.database)
+    print('2 - ', config['database'])
+
+    print('3 - ', config.database__file)
     print('3 - ', config['database']['file'])
 
-    print('4 - ', config.ip_addresses())
-    print('5 - ', config.ip_addresses__home_pc('192.168.0.1'))
-    print('6 - ', config.cucu_bambucu('bau bau'))
+    print('4 - ', config.ip_addresses)
+    print('5 - ', getattr(config, 'ip_addresses__home_pc', '192.168.0.1'))
+    print('6 - ', getattr(config, 'cucu_bambucu', 'bau bau'))
 
+    log2 = Logger.logger_with_sink(__name__, FileLoggerSink('e:\logger.txt'))
     log = Logger(__name__)
     log.set_level(Logger.DEBUG)
-    log.set_sink(FileLoggerSink('e:\logger.txt'))
 
-    log.log_info('started the program')
-    log.log_debug('inca o logare....')
-    log.log_error('inca o eroare for stack de eroare....')
+    log2.log_info('started the program')
+    log2.log_debug('inca o logare....')
+    log2.log_error('inca o eroare for stack de eroare....')
 
     try:
         d = 34 / 0
     except ZeroDivisionError:
-        log.log_error()
+        log2.log_error()
