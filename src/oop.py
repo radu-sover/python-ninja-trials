@@ -121,7 +121,9 @@ class LoggerSink:
 
 
 class FileLoggerSink(LoggerSink):
+
     def __init__(self, file_path):
+        super().__init__()
         self.file_path = file_path
 
     def write(self, message):
