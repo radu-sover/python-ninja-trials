@@ -1,5 +1,6 @@
 import traceback
 import sys
+import abc
 
 class Queue:
 
@@ -112,7 +113,13 @@ def ConfigurationFromFile(fobj):
 
 
 # Design a logging library API and implement it.
-class LoggerSink:
+class LoggerSink(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def write(self, message):
+        ...
+
+
+class ConsoleLoggerSink(LoggerSink):
     def __init__(self):
         pass
 
@@ -134,26 +141,29 @@ class FileLoggerSink(LoggerSink):
 class Logger:
     """
     Usage:
-    l = Logger('component')
-    l = Logger(frame?)
+    l = logger.logger_with_sink('component', FileLoggerSink('log.txt'))
+    l.log_info('')
 
-    to define
-    sink
-    Event
-    decorators
-    ... sau plain old logging..
+    l = Logger('component')
+    l.set_level(Logger.INFO)
+    l.set_sink(LoggerSink())
+
     """
 
     ERROR = 1
     INFO = 2
     DEBUG = 3
 
-    def __init__(self, component, level=ERROR, sink=LoggerSink):
+    def __init__(self, component, level=ERROR, sink=ConsoleLoggerSink()):
         self.component = component
-        self.level = Logger.ERROR
-        self.sink = sink
 
-    @classmethod
+        self.set_level(level)
+        # self.level = Logger.ERROR
+
+        self.set_sink(sink)
+        # self.sink = sink
+
+    @classmethod  # try the classmethod (not a real use case)
     def logger_with_sink(cls, component, sink) -> 'Logger':
         """
         Create a new logger with custom sink
@@ -166,6 +176,8 @@ class Logger:
         return log
 
     def set_sink(self, sink_instance):
+        if not issubclass(type(sink_instance), LoggerSink):
+            raise TypeError('it should be an instace of {0}'.format(LoggerSink.__name__))
         self.sink = sink_instance
 
     def set_level(self, level):
@@ -221,8 +233,8 @@ if __name__ == '__main__':
     print('6 - ', getattr(config, 'cucu_bambucu', 'bau bau'))
 
     log2 = Logger.logger_with_sink(__name__, FileLoggerSink('e:\logger.txt'))
-    log = Logger(__name__)
-    log.set_level(Logger.DEBUG)
+    # log = Logger(__name__, sink=LoggerSink())  # this should fail
+    # log.set_level(Logger.DEBUG)
 
     log2.log_info('started the program')
     log2.log_debug('inca o logare....')
